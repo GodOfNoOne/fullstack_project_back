@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Itay",
+    "password": "$2b$10$hashed_password_here",
+    "role": "member"
+  }
+]
