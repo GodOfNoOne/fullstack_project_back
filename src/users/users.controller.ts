@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { User, UsersService } from './users.service';
 
@@ -12,34 +13,19 @@ import { User, UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get()
-  findAll(): Omit<User, 'password'>[] {
-    return this.usersService.findAll();
-  }
+  @Post('login')
+  async login(@Body() body: { username: string; password: string }) {
+    const user = await this.usersService.login(body.username, body.password);
 
-  @Get(':username')
-  getUserByName(@Param('username') username: string): Omit<User, 'password'> {
-    return this.usersService.findOne(username);
+    if (!user) {
+      throw new UnauthorizedException('Invalid username or password');
+    }
+
+    return user;
   }
 
   @Post()
-  async createUser(
-    @Body()
-    body: {
-      name: string;
-      password: string;
-      role?: 'bro' | 'member' | 'admin';
-    },
-  ): Promise<Omit<User, 'password'>> {
-    return this.usersService.create(body);
-  }
-
-  @Post('login')
-  async login(
-    @Body() body: { name: string; password: string },
-  ): Promise<Omit<User, 'password'>> {
-    const user = await this.usersService.login(body.name, body.password);
-    if (!user) throw new NotFoundException('Invalid username or password');
-    return user;
+  async register(@Body() body: { username: string; password: string }) {
+    return this.usersService.register(body.username, body.password);
   }
 }
