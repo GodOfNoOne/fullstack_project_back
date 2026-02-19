@@ -5,6 +5,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
   UnauthorizedException,
 } from '@nestjs/common';
 import { User, UsersService } from './users.service';
@@ -12,6 +13,11 @@ import { User, UsersService } from './users.service';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async getUserRole(@Query('username') username: string) {
+    return this.usersService.getUserRole(username);
+  }
 
   @Post('login')
   async login(@Body() body: { username: string; password: string }) {

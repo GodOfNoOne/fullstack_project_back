@@ -54,4 +54,19 @@ export class UsersService {
       throw new ConflictException('Username already exists');
     }
   }
+
+  async getUserRole(username: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      username: user.username,
+      role: user.role.toLowerCase() as 'bro' | 'member' | 'admin',
+    };
+  }
 }

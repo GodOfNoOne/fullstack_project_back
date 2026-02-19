@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AppType, Prisma } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
@@ -68,6 +69,22 @@ export class ApplicationsService {
     forUser: string,
     appType: AppType,
   ) {
+    const sender = await this.prisma.user.findUnique({
+      where: { username: fromUser },
+    });
+
+    if (!sender) {
+      throw new NotFoundException('User Not Found');
+    }
+
+    if (sender.role !== 'ADMIN' && appType === 'Admin') {
+      throw new UnauthorizedException('User Is Not Admin');
+    }
+
+    if (sender.role === 'BRO' && appType === 'Member') {
+      throw new UnauthorizedException('Bro is not authorized');
+    }
+
     return await this.prisma.applications.create({
       data: {
         fromUser: fromUser,
