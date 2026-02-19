@@ -16,13 +16,13 @@ model User {
 }
 
 model Applications {
-  appId              Int       @id @default(autoincrement())
   timeOfSubmition DateTime  @default(now())
+  appType         AppType
+  appStatus       AppStatus @default(SENT)
+  adminVotes      String[]  @default([])
   forUser         String
   fromUser        String
-  appType         AppType
-  adminVotes      String[]
-  appStatus       AppStatus @default(SENT)
+  appId           Int       @id @default(autoincrement())
 }
 
 enum Role {
@@ -38,6 +38,6 @@ enum AppType {
 
 enum AppStatus {
   SENT
-  VOTING
+  DELETED
   DONE
 }
