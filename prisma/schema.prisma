@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  role      Role     @default(BRO)
+  createdAt DateTime @default(now())
+  password  String
+}
+
+model Applications {
+  timeOfSubmition DateTime  @default(now())
+  appType         AppType
+  appStatus       AppStatus @default(SENT)
+  adminVotes      String[]  @default([])
+  forUser         String
+  fromUser        String
+  appId           Int       @id @default(autoincrement())
+}
+
+enum Role {
+  BRO
+  MEMBER
+  ADMIN
+}
+
+enum AppType {
+  Member
+  Admin
+}
+
+enum AppStatus {
+  SENT
+  DELETED
+  DONE
+}
