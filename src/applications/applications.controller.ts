@@ -11,26 +11,28 @@ import {
   Patch,
   Post,
   Query,
+  Request,
+  UseGuards,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { AppType } from '@prisma/client';
+import type { PageType } from 'src/models/pageType.model';
+import { VoteType } from 'src/models/voteType.model';
+import { JwtAuthGuard } from 'src/auth/auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('applications')
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Get()
   async getApplicationList(
-    @Query('username') username: string,
-    @Query('role') role: 'bro' | 'member' | 'admin',
-    @Query('pageType') pageType: 'Member' | 'Admin',
+    @Request() req,
+    @Query('pageType') pageType: PageType,
   ) {
-    const applications = this.applicationsService.getApplicationsList(
-      username,
-      role,
-      pageType,
-    );
-    return applications;
+    const username = req.user.username;
+
+    return this.applicationsService.getApplicationsList(username, pageType);
   }
 
   @Get('available/:appType')
@@ -46,10 +48,13 @@ export class ApplicationsController {
 
   @Post()
   async createNewApplication(
-    @Body() body: { fromUser: string; forUser: string; appType: AppType },
+    @Request() req,
+    @Body() body: { forUser: string; appType: AppType },
   ) {
+    const fromUser = req.user.username;
+
     return this.applicationsService.createNewApplication(
-      body.fromUser,
+      fromUser,
       body.forUser,
       body.appType,
     );
@@ -58,13 +63,16 @@ export class ApplicationsController {
   @Patch(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateVote(
+    @Request() req,
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { voteType: 'Vote' | 'Unvote'; username: string },
+    @Body() body: { voteType: VoteType },
   ) {
+    const username = req.user.username;
+
     return this.applicationsService.updateAdminVotes(
       id,
       body.voteType,
-      body.username,
+      username,
     );
   }
 

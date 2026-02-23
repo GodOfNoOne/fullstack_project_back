@@ -7,20 +7,26 @@ import {
 } from '@nestjs/common';
 import { AppType, Prisma } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
+import { PageType } from 'src/models/pageType.model';
+import { VoteType } from 'src/models/voteType.model';
 
 @Injectable()
 export class ApplicationsService {
   constructor(private readonly prisma: DbService) {}
 
-  async getApplicationsList(
-    username: string,
-    role: 'bro' | 'member' | 'admin',
-    pageType: 'Member' | 'Admin',
-  ) {
+  async getApplicationsList(username: string, pageType: PageType) {
     const applications = await this.prisma.applications.findMany({
       where: { appStatus: 'SENT' },
     });
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+    });
 
+    const role = user?.role.toLowerCase();
+
+    if (pageType === 'Admin' && role !== 'admin') {
+      throw new UnauthorizedException();
+    }
     if (pageType === 'Admin') {
       return applications.filter((app) => app.fromUser !== username);
     }
@@ -111,11 +117,7 @@ export class ApplicationsService {
     }
   }
 
-  async updateAdminVotes(
-    appId: number,
-    voteType: 'Vote' | 'Unvote',
-    username: string,
-  ) {
+  async updateAdminVotes(appId: number, voteType: VoteType, username: string) {
     const user = await this.prisma.user.findUnique({
       where: { username: username },
     });

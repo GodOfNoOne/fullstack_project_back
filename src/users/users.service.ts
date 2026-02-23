@@ -1,37 +1,22 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { DbService } from 'src/db/db.service';
-
-export interface User {
-  username: string;
-  password: string;
-  role: 'bro' | 'member' | 'admin';
-}
+import { Roles } from 'src/models/role.model';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: DbService) {}
   private saltRounds = 10;
 
-  async login(username: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-    });
+  async validateUser(username: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { username } });
 
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) return null;
 
-    if (!passwordMatch) {
-      return null;
-    }
-
-    return {
-      username: user.username,
-      role: user.role.toLowerCase() as 'bro' | 'member' | 'admin',
-    };
+    return user;
   }
 
   async register(username: string, password: string) {
@@ -45,10 +30,7 @@ export class UsersService {
         },
       });
 
-      return {
-        username: user.username,
-        role: user.role.toLowerCase() as 'bro' | 'member' | 'admin',
-      };
+      return user;
     } catch (error) {
       // Unique constraint violation
       throw new ConflictException('Username already exists');
@@ -66,7 +48,7 @@ export class UsersService {
 
     return {
       username: user.username,
-      role: user.role.toLowerCase() as 'bro' | 'member' | 'admin',
+      role: user.role.toLowerCase() as Roles,
     };
   }
 }
